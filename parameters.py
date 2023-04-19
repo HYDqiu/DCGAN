@@ -1,9 +1,10 @@
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--n_epochs", type=int, default=5001, help="number of epochs of training")
-parser.add_argument("--batch_size", type=int, default=128, help="size of the batches")
-parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
+parser.add_argument("--n_epochs", type=int, default=1201, help="number of epochs of training")
+parser.add_argument("--batch_size", type=int, default=256, help="size of the batches")
+parser.add_argument("--glr", type=float, default=2e-4, help="adam: learning rate")
+parser.add_argument("--dlr", type=float, default=1e-4, help="adam: learning rate")
 parser.add_argument("--b1", type=float, default=0.5, help="adam: decay of first order momentum of gradient")
 parser.add_argument("--b2", type=float, default=0.999, help="adam: decay of first order momentum of gradient")
 parser.add_argument("--n_cpu", type=int, default=8, help="number of cpu threads to use during batch generation")

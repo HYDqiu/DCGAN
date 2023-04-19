@@ -12,10 +12,19 @@ from torchvision.utils import save_image
 check=True
 cuda = True if torch.cuda.is_available() else False
 
-traindata_path='/home/user/BCI_datasets/GAN_5000/IV_1_32*32/1'
-checkpoint_path='./checkpoint/checkpoint4/'
-save_loss='./loss3.txt'
-image_path='./images4/'
+'''
+traindata_path='/home/user/BCI_datasets/GAN_5000/IV_1_32*32/GAN_train_400/11'
+checkpoint_path='./checkpoint/checkpoint/'
+save_loss='./loss1.txt'
+image_path='./images1/'
+'''
+
+
+
+traindata_path='/media/user/data/datasets/cifar10/cifar-10-python'
+checkpoint_path='./CIFAR_checkpoint/'
+image_path='./CIFAR_images/'
+save_loss='./loss1.txt'
 
 def weights_init_normal(m):
     classname = m.__class__.__name__
@@ -51,22 +60,22 @@ transform=transforms.Compose([transforms.ToTensor(),
 # Configure data loader
 
 
-train_dataset=datasets.ImageFolder(traindata_path,transform)
-
+#train_dataset=datasets.ImageFolder(traindata_path,transform)
+train_dataset=datasets.CIFAR10(traindata_path,transform=transform)
 dataloader = torch.utils.data.DataLoader(train_dataset,batch_size=opt.batch_size,shuffle=True)
 
 # Optimizers
-optimizer_G = torch.optim.Adam(generator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
-optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
+optimizer_G = torch.optim.Adam(generator.parameters(), lr=opt.glr, betas=(opt.b1, opt.b2))
+optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=opt.dlr, betas=(opt.b1, opt.b2))
 
 Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 
 # ----------
 #  Training
 # ----------
-start_epoch = 1
+start_epoch = 0
 if check:
-    checkpoint=torch.load('./checkpoint/checkpoint4/100')
+    checkpoint=torch.load('./CIFAR_checkpoint/150')
     generator.load_state_dict(checkpoint['G'])
     discriminator.load_state_dict(checkpoint['D'])
     optimizer_G.load_state_dict(checkpoint['optimG'])
@@ -87,14 +96,14 @@ for epoch in range(start_epoch+1,opt.n_epochs):
         # -----------------
         #  Train Generator
         # -----------------
-        if i % 2 == 0:
-            optimizer_G.zero_grad()
 
-            # Loss measures generator's ability to fool the discriminator
-            g_loss = adversarial_loss(discriminator(gen_imgs), valid)
+        optimizer_G.zero_grad()
 
-            g_loss.backward()
-            optimizer_G.step()
+        # Loss measures generator's ability to fool the discriminator
+        g_loss = adversarial_loss(discriminator(gen_imgs), valid)
+
+        g_loss.backward()
+        optimizer_G.step()
 
         # ----------------------
         #  Train Discriminator
@@ -114,7 +123,7 @@ for epoch in range(start_epoch+1,opt.n_epochs):
         % (epoch, opt.n_epochs,  d_loss.item(), g_loss.item())
     )
 
-    if epoch%100==0:
+    if epoch%30==0:
         # opt.lr=opt.lr/2
         checkpoint={
             'epoch':epoch,
@@ -122,13 +131,13 @@ for epoch in range(start_epoch+1,opt.n_epochs):
             'D':discriminator.state_dict(),
             'optimG':optimizer_G.state_dict(),
             'optimD':optimizer_D.state_dict(),
-            'lr':opt.lr
+
         }
         torch.save(checkpoint, checkpoint_path + '%d' % (epoch))
-    if epoch%200==0:
+    if epoch%3==0:
         with torch.no_grad():
             batch = 100
             z = torch.randn((batch, 100)).cuda()
             imgs = generator(z)
-            save_image(imgs, image_path+'sonw%d.png'%(epoch), nrow=10)
+            save_image(imgs, image_path+'sonw%d.png'%(epoch), nrow=10,normalize=True)
 
